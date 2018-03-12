@@ -3,6 +3,7 @@ package sweep
 import (
 	"bytes"
 	"io"
+	"io/ioutil"
 	"log"
 )
 
@@ -11,9 +12,9 @@ type Scan []*ScanSample
 
 // ScanSample represents a scan result.
 type ScanSample struct {
-	Angle          float64 // Angle in degrees
-	Distance       int     // Distance in cm
-	SignalStrength byte    // Signal strength in god knows what
+	Angle          float64 `json:"a"` // Angle in degrees
+	Distance       int     `json:"d"` // Distance in cm
+	SignalStrength byte    `json:"s"` // Signal strength in god knows what
 }
 
 // StartScan starts the scan, and returns a channel that is closed when
@@ -78,7 +79,12 @@ func (d *Device) StartScan() (<-chan Scan, error) {
 	return results, nil
 }
 
-// StopScan stops an on-going scan.
+// StopScan stops an ongoing scan.
 func (d *Device) StopScan() error {
 	return d.WriteCommand(CmdDataStop)
+}
+
+// Drain drains the serial buffer.
+func (d *Device) Drain() {
+	io.Copy(ioutil.Discard, d.reader)
 }
