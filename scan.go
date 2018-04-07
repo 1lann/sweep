@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math"
 )
 
 // Scan represents a full scan.
@@ -15,6 +16,18 @@ type ScanSample struct {
 	Angle          float64 `json:"a"` // Angle in degrees
 	Distance       int     `json:"d"` // Distance in cm
 	SignalStrength byte    `json:"s"` // Signal strength in god knows what
+}
+
+// Rad returns the angle of the sample in radians.
+func (s *ScanSample) Rad() float64 {
+	return (s.Angle * math.Pi) / 180.0
+}
+
+// Cartesian returns the sample as cartesian x,y coordinates.
+func (s *ScanSample) Cartesian() (float64, float64) {
+	rad := s.Rad()
+	return math.Cos(rad) * float64(s.Distance),
+		-math.Sin(rad) * float64(s.Distance)
 }
 
 // StartScan starts the scan, and returns a channel that is closed when
@@ -64,7 +77,7 @@ func (d *Device) StartScan() (<-chan Scan, error) {
 				buffer = make(Scan, 0, 500)
 			}
 
-			if scanRes.Distance <= 2 {
+			if scanRes.Distance <= 30 {
 				continue
 			}
 
